@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
-import { ClipboardCopy, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ClipboardCopy, RefreshCw, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 
 export default function App() {
   const [inputText, setInputText] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<{
     expected: number;
     actual: number;
@@ -69,6 +72,46 @@ export default function App() {
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: {
+              parts: [
+                { inlineData: { data: base64Data, mimeType: file.type } },
+                { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
+              ]
+            }
+          });
+
+          const extractedText = response.text || '';
+          setInputText(prev => prev ? prev + '\n' + extractedText : extractedText);
+        } catch (err) {
+          console.error("AI Analysis error:", err);
+          alert(`圖片辨識失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
+        } finally {
+          setIsAnalyzing(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File reading error:", error);
+      alert("檔案讀取失敗。");
+      setIsAnalyzing(false);
+    }
+  };
+
   const getHeaderInfo = () => {
     const year = currentTime.getFullYear();
     const month = String(currentTime.getMonth() + 1).padStart(2, '0');
@@ -122,14 +165,31 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.4</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.5.1</span>
         </div>
 
         {/* Input Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h2 className="text-lg font-semibold text-gray-700">輸入資料</h2>
-            <span className="text-xs text-gray-500">請輸入出勤資料，系統會自動加總所有數據</span>
+            <div className="flex items-center gap-2">
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAnalyzing}
+                className="flex items-center gap-2 text-xs bg-white hover:bg-gray-100 text-blue-600 border border-blue-200 px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                {isAnalyzing ? 'AI 辨識中...' : '上傳截圖 (AI)'}
+              </button>
+              <span className="text-xs text-gray-500">請輸入出勤資料，或上傳截圖</span>
+            </div>
           </div>
           <div className="p-4">
             <textarea
