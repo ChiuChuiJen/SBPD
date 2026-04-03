@@ -83,7 +83,12 @@ export default function App() {
         try {
           const base64Data = (reader.result as string).split(',')[1];
           
-          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+          const apiKey = process.env.GEMINI_API_KEY;
+          if (!apiKey || apiKey === 'undefined') {
+            throw new Error("找不到 API Key。請在 Vercel 的 Environment Variables 中設定 GEMINI_API_KEY。");
+          }
+          
+          const ai = new GoogleGenAI({ apiKey });
           const response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: {
@@ -165,7 +170,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.5.1</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.5.2</span>
         </div>
 
         {/* Input Section */}
