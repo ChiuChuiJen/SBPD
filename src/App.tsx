@@ -167,6 +167,25 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
     return output;
   };
 
+  const isCountValid = () => {
+    if (!result) return true;
+    const { expected, actual, counts } = result;
+    // 假別總和 (不包含加班與晚到，因為這兩者通常包含在實到或應到中，不屬於缺勤假別)
+    const leaveSum = 
+      counts.annual + 
+      counts.personal + 
+      counts.sick + 
+      counts.menstrual + 
+      counts.official + 
+      counts.return + 
+      counts.absent + 
+      counts.maternity + 
+      counts.marriage + 
+      counts.funeral;
+    
+    return expected === (actual + leaveSum);
+  };
+
   const handleCopy = () => {
     const text = generateOutputText();
     if (text) {
@@ -182,7 +201,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.7</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8</span>
         </div>
 
         {/* Input Section */}
@@ -251,9 +270,29 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
           </div>
           <div className="p-4">
             {result ? (
-              <pre className="bg-gray-800 text-green-400 p-6 rounded-lg font-mono text-sm leading-relaxed overflow-x-auto whitespace-pre-wrap">
-                {generateOutputText()}
-              </pre>
+              <div className="relative">
+                <pre className={`p-6 rounded-lg font-mono text-sm leading-relaxed overflow-x-auto whitespace-pre-wrap transition-colors ${
+                  isCountValid() ? 'bg-gray-800 text-green-400' : 'bg-red-50 text-red-600 border border-red-200'
+                }`}>
+                  {generateOutputText()}
+                </pre>
+                {!isCountValid() && (
+                  <div className="mt-2 text-xs text-red-500 font-medium flex items-center gap-1">
+                    ⚠️ 注意：實到 ({result.actual}) + 假別總和 ({
+                      result.counts.annual + 
+                      result.counts.personal + 
+                      result.counts.sick + 
+                      result.counts.menstrual + 
+                      result.counts.official + 
+                      result.counts.return + 
+                      result.counts.absent + 
+                      result.counts.maternity + 
+                      result.counts.marriage + 
+                      result.counts.funeral
+                    }) 與應到 ({result.expected}) 不符，請檢查輸入資料。
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="h-64 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
                 請輸入資料並點擊「開始統計」
