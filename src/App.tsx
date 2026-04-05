@@ -54,22 +54,22 @@ export default function App() {
       return total;
     };
 
-    const expected = getSum(/(?:應到|應)[:：\s]*(\d+)/g);
-    const actual = getSum(/(?:實到|實)[:：\s]*(\d+)/g);
+    const expected = getSum(/(?:應到|應)[:：\s*xX]*(\d+)/g);
+    const actual = getSum(/(?:實到|實)[:：\s*xX]*(\d+)/g);
 
     const counts = {
-      overtime: getSum(/(?:加班|加)[:：\s]*(\d+)?/g, 1),
-      annual: getSum(/(?:特休假|特休|特)[:：\s]*(\d+)?/g, 1),
-      personal: getSum(/(?:事假|事)[:：\s]*(\d+)?/g, 1),
-      sick: getSum(/(?:病假|病)[:：\s]*(\d+)?/g, 1),
-      menstrual: getSum(/(?:生理假|生理|生)[:：\s]*(\d+)?/g, 1),
-      official: getSum(/(?:公假|公)[:：\s]*(\d+)?/g, 1),
-      return: getSum(/(?:回國|回)[:：\s]*(\d+)?/g, 1),
-      absent: getSum(/(?:未到|未)[:：\s]*(\d+)?/g, 1),
-      late: getSum(/(?:晚到|晚)[:：\s]*(\d+)?/g, 1),
-      maternity: getSum(/(?:陪產假|陪產|產)[:：\s]*(\d+)?/g, 1),
-      marriage: getSum(/(?:結婚|婚假|婚)[:：\s]*(\d+)?/g, 1),
-      funeral: getSum(/(?:喪假|喪)[:：\s]*(\d+)?/g, 1),
+      overtime: getSum(/(?:加班|加)[:：\s*xX]*(\d+)?/g, 1),
+      annual: getSum(/(?:特休假|特休|特)[:：\s*xX]*(\d+)?/g, 1),
+      personal: getSum(/(?:事假|事)[:：\s*xX]*(\d+)?/g, 1),
+      sick: getSum(/(?:病假|病)[:：\s*xX]*(\d+)?/g, 1),
+      menstrual: getSum(/(?:生理假|生理|生)[:：\s*xX]*(\d+)?/g, 1),
+      official: getSum(/(?:公假|公)[:：\s*xX]*(\d+)?/g, 1),
+      return: getSum(/(?:回國|回)[:：\s*xX]*(\d+)?/g, 1),
+      absent: getSum(/(?:未到|未)[:：\s*xX]*(\d+)?/g, 1),
+      late: getSum(/(?:晚到|晚)[:：\s*xX]*(\d+)?/g, 1),
+      maternity: getSum(/(?:陪產假|陪產|產)[:：\s*xX]*(\d+)?/g, 1),
+      marriage: getSum(/(?:結婚|婚假|婚)[:：\s*xX]*(\d+)?/g, 1),
+      funeral: getSum(/(?:喪假|喪)[:：\s*xX]*(\d+)?/g, 1),
     };
 
     setResult({
@@ -202,7 +202,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8.1</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8.2</span>
         </div>
 
         {/* Input Section */}
