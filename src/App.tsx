@@ -38,7 +38,8 @@ export default function App() {
   }, []);
 
   const handleCalculate = () => {
-    const text = inputText;
+    // 將全形數字轉換為半形數字，避免辨識失敗
+    const text = inputText.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0));
     
     const getSum = (regex: RegExp, defaultVal: number = 0) => {
       const matches = [...text.matchAll(regex)];
@@ -201,7 +202,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8.1</span>
         </div>
 
         {/* Input Section */}
