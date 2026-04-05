@@ -26,6 +26,7 @@ export default function App() {
       late: number;
       maternity: number;
       marriage: number;
+      funeral: number;
     };
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -67,6 +68,7 @@ export default function App() {
       late: getSum(/(?:晚到|晚)[:：\s]*(\d+)?/g, 1),
       maternity: getSum(/(?:陪產假|陪產|產)[:：\s]*(\d+)?/g, 1),
       marriage: getSum(/(?:結婚|婚假|婚)[:：\s]*(\d+)?/g, 1),
+      funeral: getSum(/(?:喪假|喪)[:：\s]*(\d+)?/g, 1),
     };
 
     setResult({
@@ -98,7 +100,7 @@ export default function App() {
           contents: {
             parts: [
               { inlineData: { data: base64Data, mimeType: file.type } },
-              { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到、產假、婚假等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
+              { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到、產假、婚假、喪假等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
             ]
           }
         });
@@ -160,6 +162,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
     if (result.counts.late > 0) output += `\n晚到:  ${result.counts.late}`;
     if (result.counts.maternity > 0) output += `\n產假:  ${result.counts.maternity}`;
     if (result.counts.marriage > 0) output += `\n婚假:  ${result.counts.marriage}`;
+    if (result.counts.funeral > 0) output += `\n喪假:  ${result.counts.funeral}`;
 
     return output;
   };
@@ -179,7 +182,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.6</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.7</span>
         </div>
 
         {/* Input Section */}
