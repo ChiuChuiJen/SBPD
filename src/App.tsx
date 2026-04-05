@@ -24,6 +24,8 @@ export default function App() {
       return: number;
       absent: number;
       late: number;
+      maternity: number;
+      marriage: number;
     };
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -63,6 +65,8 @@ export default function App() {
       return: getSum(/(?:回國|回)[:：\s]*(\d+)?/g, 1),
       absent: getSum(/(?:未到|未)[:：\s]*(\d+)?/g, 1),
       late: getSum(/(?:晚到|晚)[:：\s]*(\d+)?/g, 1),
+      maternity: getSum(/(?:陪產假|陪產|產)[:：\s]*(\d+)?/g, 1),
+      marriage: getSum(/(?:結婚|婚假|婚)[:：\s]*(\d+)?/g, 1),
     };
 
     setResult({
@@ -77,44 +81,47 @@ export default function App() {
     if (!file) return;
 
     setIsAnalyzing(true);
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        try {
-          const base64Data = (reader.result as string).split(',')[1];
-          
-          const apiKey = process.env.GEMINI_API_KEY;
-          if (!apiKey || apiKey === 'undefined') {
-            throw new Error("找不到 API Key。請在 Vercel 的 Environment Variables 中設定 GEMINI_API_KEY。");
-          }
-          
-          const ai = new GoogleGenAI({ apiKey });
-          const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: {
-              parts: [
-                { inlineData: { data: base64Data, mimeType: file.type } },
-                { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
-              ]
-            }
-          });
-
-          const extractedText = response.text || '';
-          setInputText(prev => prev ? prev + '\n' + extractedText : extractedText);
-        } catch (err) {
-          console.error("AI Analysis error:", err);
-          alert(`圖片辨識失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
-        } finally {
-          setIsAnalyzing(false);
-          if (fileInputRef.current) fileInputRef.current.value = '';
+    const reader = new FileReader();
+    
+    reader.onloadend = async () => {
+      try {
+        const base64Data = (reader.result as string).split(',')[1];
+        
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || apiKey === 'undefined') {
+          throw new Error("找不到 API Key。請在 Vercel 的 Environment Variables 中設定 GEMINI_API_KEY。");
         }
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error("File reading error:", error);
+        
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: {
+            parts: [
+              { inlineData: { data: base64Data, mimeType: file.type } },
+              { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到、產假、婚假等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
+            ]
+          }
+        });
+
+        const extractedText = response.text || '';
+        setInputText(prev => prev ? prev + '\n' + extractedText : extractedText);
+      } catch (err) {
+        console.error("AI Analysis error:", err);
+        alert(`圖片辨識失敗：${err instanceof Error ? err.message : '未知錯誤'}`);
+      } finally {
+        setIsAnalyzing(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+
+    reader.onerror = () => {
+      console.error("File reading error");
       alert("檔案讀取失敗。");
       setIsAnalyzing(false);
-    }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const getHeaderInfo = () => {
@@ -151,6 +158,8 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
     if (result.counts.return > 0) output += `\n回國:  ${result.counts.return}`;
     if (result.counts.absent > 0) output += `\n未到:  ${result.counts.absent}`;
     if (result.counts.late > 0) output += `\n晚到:  ${result.counts.late}`;
+    if (result.counts.maternity > 0) output += `\n產假:  ${result.counts.maternity}`;
+    if (result.counts.marriage > 0) output += `\n婚假:  ${result.counts.marriage}`;
 
     return output;
   };
@@ -170,7 +179,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.5.2</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.6</span>
         </div>
 
         {/* Input Section */}
