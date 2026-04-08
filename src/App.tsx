@@ -66,7 +66,7 @@ export default function App() {
       official: getSum(/(?:公假|公)[:：\s*xX]*(\d+)?/g, 1),
       return: getSum(/(?:回國|回)[:：\s*xX]*(\d+)?/g, 1),
       absent: getSum(/(?:未到|未)[:：\s*xX]*(\d+)?/g, 1),
-      late: getSum(/(?:晚到|晚)[:：\s*xX]*(\d+)?/g, 1),
+      late: getSum(/(?:晚到|晚|遲到|遲)[:：\s*xX]*(\d+)?/g, 1),
       maternity: getSum(/(?:陪產假|陪產|產)[:：\s*xX]*(\d+)?/g, 1),
       marriage: getSum(/(?:結婚|婚假|婚)[:：\s*xX]*(\d+)?/g, 1),
       funeral: getSum(/(?:喪假|喪)[:：\s*xX]*(\d+)?/g, 1),
@@ -171,7 +171,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
   const isCountValid = () => {
     if (!result) return true;
     const { expected, actual, counts } = result;
-    // 假別總和 (不包含加班與晚到，因為這兩者通常包含在實到或應到中，不屬於缺勤假別)
+    // 假別總和 (不包含加班，因為加班通常不屬於缺勤假別)
     const leaveSum = 
       counts.annual + 
       counts.personal + 
@@ -180,6 +180,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
       counts.official + 
       counts.return + 
       counts.absent + 
+      counts.late + 
       counts.maternity + 
       counts.marriage + 
       counts.funeral;
@@ -202,7 +203,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.8.2</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.9</span>
         </div>
 
         {/* Input Section */}
@@ -287,6 +288,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
                       result.counts.official + 
                       result.counts.return + 
                       result.counts.absent + 
+                      result.counts.late + 
                       result.counts.maternity + 
                       result.counts.marriage + 
                       result.counts.funeral
