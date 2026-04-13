@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardCopy, RefreshCw, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ClipboardCopy, RefreshCw, Image as ImageIcon, Loader2, History, X } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 export default function App() {
@@ -30,6 +30,20 @@ export default function App() {
     };
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+  const versionHistory = [
+    { version: 'V1.10', date: '2026/04/13', desc: '修正數據校驗邏輯，將「加班」從假別總和中扣除，正確匹配應到人數。' },
+    { version: 'V1.9', date: '2026/04/08', desc: '將「晚到/遲到」納入假別總和計算，並支援「遲到」關鍵字。' },
+    { version: 'V1.8.2', date: '2026/04/05', desc: '支援 x 或 * 作為數字乘號（例如：事假x2）。' },
+    { version: 'V1.8.1', date: '2026/04/05', desc: '修正全形數字（如 ３）無法正確辨識的問題。' },
+    { version: 'V1.8', date: '2026/04/05', desc: '實作數據校驗功能，實到與應到不符時顯示紅色警示與差異提示。' },
+    { version: 'V1.7', date: '2026/04/05', desc: '新增「喪假」統計項目，更新 AI 辨識指令。' },
+    { version: 'V1.6', date: '2026/04/05', desc: '新增「產假」與「婚假」統計，優化圖片上傳穩定性與錯誤處理。' },
+    { version: 'V1.5.2', date: '2026/04/03', desc: '強化 Vercel 部署時的 API Key 設定提示與處理機制。' },
+    { version: 'V1.5.1', date: '2026/04/03', desc: '修正 AI 模型名稱，改善圖片辨識錯誤提示。' },
+    { version: 'V1.5', date: '2026/04/03', desc: '重新整合 Gemini AI 進行截圖辨識，更新系統架構。' },
+  ];
 
   // Update time every minute to keep Day/Night accurate
   useEffect(() => {
@@ -204,7 +218,16 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.10</span>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsHistoryOpen(true)}
+              className="text-sm font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1 transition-colors"
+            >
+              <History size={16} />
+              版本歷史
+            </button>
+            <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.10</span>
+          </div>
         </div>
 
         {/* Input Section */}
@@ -305,7 +328,35 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
           </div>
         </div>
 
+        {/* Footer */}
+        <div className="text-right text-xs text-gray-400 pt-2 pb-4">
+          &copy; {currentTime.getFullYear()} ChiuChuiJen
+        </div>
+
       </div>
+
+      {/* Version History Modal */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2"><History size={18}/> 版本歷史</h2>
+              <button onClick={() => setIsHistoryOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 space-y-4">
+              {versionHistory.map((item, idx) => (
+                <div key={idx} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-bold text-blue-600">{item.version}</span>
+                    <span className="text-xs text-gray-400">{item.date}</span>
+                  </div>
+                  <p className="text-sm text-gray-600">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
