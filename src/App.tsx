@@ -171,7 +171,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
   const isCountValid = () => {
     if (!result) return true;
     const { expected, actual, counts } = result;
-    // 假別總和 (不包含加班，因為加班通常不屬於缺勤假別)
+    // 假別總和
     const leaveSum = 
       counts.annual + 
       counts.personal + 
@@ -185,7 +185,8 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
       counts.marriage + 
       counts.funeral;
     
-    return expected === (actual + leaveSum);
+    // 應到 = 實到 + 假別總和 - 加班
+    return expected === (actual + leaveSum - counts.overtime);
   };
 
   const handleCopy = () => {
@@ -203,7 +204,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
         {/* Header */}
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
-          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.9</span>
+          <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.10</span>
         </div>
 
         {/* Input Section */}
@@ -292,7 +293,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
                       result.counts.maternity + 
                       result.counts.marriage + 
                       result.counts.funeral
-                    }) 與應到 ({result.expected}) 不符，請檢查輸入資料。
+                    }){result.counts.overtime > 0 ? ` - 加班 (${result.counts.overtime})` : ''} 與應到 ({result.expected}) 不符，請檢查輸入資料。
                   </div>
                 )}
               </div>
