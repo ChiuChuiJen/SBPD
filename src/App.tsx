@@ -30,7 +30,7 @@ export default function App() {
     };
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   const versionHistory = [
     { version: 'V1.10', date: '2026/04/13', desc: '修正數據校驗邏輯，將「加班」從假別總和中扣除，正確匹配應到人數。' },
