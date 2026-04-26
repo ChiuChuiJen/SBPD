@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ClipboardCopy, RefreshCw, Image as ImageIcon, Loader2, History, X } from 'lucide-react';
+import { ClipboardCopy, RefreshCw, Image as ImageIcon, Loader2, History, X, BookOpen } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
 export default function App() {
@@ -27,12 +27,15 @@ export default function App() {
       maternity: number;
       marriage: number;
       funeral: number;
+      abroad: number;
     };
   } | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
+  const [isKeywordOpen, setIsKeywordOpen] = useState(false);
 
   const versionHistory = [
+    { version: 'V1.11', date: '2026/04/26', desc: '新增「出國」統計項目（與「回國」區分），並加入「假別歸屬」查詢清單。' },
     { version: 'V1.10', date: '2026/04/13', desc: '修正數據校驗邏輯，將「加班」從假別總和中扣除，正確匹配應到人數。' },
     { version: 'V1.9', date: '2026/04/08', desc: '將「晚到/遲到」納入假別總和計算，並支援「遲到」關鍵字。' },
     { version: 'V1.8.2', date: '2026/04/05', desc: '支援 x 或 * 作為數字乘號（例如：事假x2）。' },
@@ -84,6 +87,7 @@ export default function App() {
       maternity: getSum(/(?:陪產假|陪產|產)[:：\s*xX]*(\d+)?/g, 1),
       marriage: getSum(/(?:結婚|婚假|婚)[:：\s*xX]*(\d+)?/g, 1),
       funeral: getSum(/(?:喪假|喪)[:：\s*xX]*(\d+)?/g, 1),
+      abroad: getSum(/(?:出國|出)[:：\s*xX]*(\d+)?/g, 1),
     };
 
     setResult({
@@ -115,7 +119,7 @@ export default function App() {
           contents: {
             parts: [
               { inlineData: { data: base64Data, mimeType: file.type } },
-              { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到、產假、婚假、喪假等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
+              { text: "請辨識這張截圖中的出勤資料。請直接輸出文字內容，包含應到、實到以及各種假別（如特休、病假、加班、晚到、產假、婚假、喪假、出國、回國等）的人數。不需要額外的解釋，直接輸出辨識到的文字即可。" }
             ]
           }
         });
@@ -172,6 +176,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
     if (result.counts.sick > 0) output += `\n病假:  ${result.counts.sick}`;
     if (result.counts.menstrual > 0) output += `\n生理假: ${result.counts.menstrual}`;
     if (result.counts.official > 0) output += `\n公假:  ${result.counts.official}`;
+    if (result.counts.abroad > 0) output += `\n出國:  ${result.counts.abroad}`;
     if (result.counts.return > 0) output += `\n回國:  ${result.counts.return}`;
     if (result.counts.absent > 0) output += `\n未到:  ${result.counts.absent}`;
     if (result.counts.late > 0) output += `\n晚到:  ${result.counts.late}`;
@@ -192,6 +197,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
       counts.sick + 
       counts.menstrual + 
       counts.official + 
+      counts.abroad + 
       counts.return + 
       counts.absent + 
       counts.late + 
@@ -220,13 +226,20 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
           <h1 className="text-2xl font-bold text-gray-800">SB出勤人數 統計系統</h1>
           <div className="flex items-center gap-3">
             <button 
+              onClick={() => setIsKeywordOpen(true)}
+              className="text-sm font-medium text-gray-600 hover:text-green-600 flex items-center gap-1 transition-colors"
+            >
+              <BookOpen size={16} />
+              假別歸屬
+            </button>
+            <button 
               onClick={() => setIsHistoryOpen(true)}
               className="text-sm font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1 transition-colors"
             >
               <History size={16} />
               版本歷史
             </button>
-            <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.10</span>
+            <span className="text-sm font-medium text-gray-500 bg-gray-200 px-3 py-1 rounded-full">V1.11</span>
           </div>
         </div>
 
@@ -310,6 +323,7 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
                       result.counts.sick + 
                       result.counts.menstrual + 
                       result.counts.official + 
+                      result.counts.abroad + 
                       result.counts.return + 
                       result.counts.absent + 
                       result.counts.late + 
@@ -353,6 +367,48 @@ SB: ${result.actual}/${result.expected}   ${rateNum}%`;
                   <p className="text-sm text-gray-600">{item.desc}</p>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keyword Mapping Modal */}
+      {isKeywordOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2"><BookOpen size={18}/> 假別歸屬 (關鍵字對照)</h2>
+              <button onClick={() => setIsKeywordOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors"><X size={20}/></button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1 h-full">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-gray-50 text-gray-700 uppercase text-xs">
+                  <tr>
+                    <th className="px-4 py-2 border-b">假別</th>
+                    <th className="px-4 py-2 border-b">識別關鍵字</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-gray-600">
+                  <tr><td className="px-4 py-2 font-medium">特休</td><td className="px-4 py-2">特休假、特休、特</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">事假</td><td className="px-4 py-2">事假、事</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">病假</td><td className="px-4 py-2">病假、病</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">生理假</td><td className="px-4 py-2">生理假、生理、生</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">公假</td><td className="px-4 py-2">公假、公</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">產假</td><td className="px-4 py-2">陪產假、陪產、產</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">婚假</td><td className="px-4 py-2">結婚、婚假、婚</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">喪假</td><td className="px-4 py-2">喪假、喪</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">出國</td><td className="px-4 py-2">出國、出</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">回國</td><td className="px-4 py-2">回國、回</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">未到</td><td className="px-4 py-2">未到、未</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">晚到/遲到</td><td className="px-4 py-2">晚到、晚、遲到、遲</td></tr>
+                  <tr><td className="px-4 py-2 font-medium border-t-2 border-gray-100">加班</td><td className="px-4 py-2 border-t-2 border-gray-100">加班、加</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">應到</td><td className="px-4 py-2">應到、應</td></tr>
+                  <tr><td className="px-4 py-2 font-medium">實到</td><td className="px-4 py-2">實到、實</td></tr>
+                </tbody>
+              </table>
+              <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                📌 系統也支援乘號，例如：「事假x2」或「特休*3」，若未標示數量則預設為 1 人。
+              </div>
             </div>
           </div>
         </div>
